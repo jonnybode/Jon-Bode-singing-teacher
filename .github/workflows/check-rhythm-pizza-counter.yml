@@ -1,0 +1,36 @@
+name: Check Rhythm Pizza Counter
+
+on:
+  push:
+    branches:
+      - automation-rhythm-pizza-counter
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check pending uses and reset
+        shell: bash
+        run: |
+          set -euo pipefail
+          GET_URL="https://countapi.mileshilliard.com/api/v1/get/vtm_rp_20260821_q_8c42f1"
+          SET_URL="https://countapi.mileshilliard.com/api/v1/set/vtm_rp_20260821_q_8c42f1?value=0"
+          body=$(curl -sS -w '\n%{http_code}' "$GET_URL")
+          status=$(printf '%s' "$body" | tail -n1)
+          json=$(printf '%s' "$body" | sed '$d')
+          if [ "$status" = "404" ]; then
+            value=0
+          elif [ "$status" = "200" ]; then
+            value=$(python3 -c 'import json,sys; print(int(json.load(sys.stdin).get("value",0)))' <<< "$json")
+          else
+            echo "COUNTAPI_ERROR_STATUS=$status"
+            echo "$json"
+            exit 1
+          fi
+          echo "RHYTHM_PIZZA_NEW_USES=$value"
+          if [ "$value" -gt 0 ]; then
+            curl -fsS "$SET_URL" >/dev/null
+            echo "RHYTHM_PIZZA_COUNTER_RESET=1"
+          else
+            echo "RHYTHM_PIZZA_COUNTER_RESET=0"
+          fi
