@@ -4,11 +4,17 @@ on:
   push:
     branches:
       - automation-rhythm-pizza-counter
+    paths-ignore:
+      - automation/rhythm-pizza-result.txt
+
+permissions:
+  contents: write
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - name: Check pending uses and reset
         shell: bash
         run: |
@@ -27,10 +33,17 @@ jobs:
             echo "$json"
             exit 1
           fi
-          echo "RHYTHM_PIZZA_NEW_USES=$value"
           if [ "$value" -gt 0 ]; then
             curl -fsS "$SET_URL" >/dev/null
-            echo "RHYTHM_PIZZA_COUNTER_RESET=1"
-          else
-            echo "RHYTHM_PIZZA_COUNTER_RESET=0"
           fi
+          mkdir -p automation
+          printf 'source_sha=%s\nvalue=%s\nchecked_at=%s\n' "$GITHUB_SHA" "$value" "$(date -u +%FT%TZ)" > automation/rhythm-pizza-result.txt
+      - name: Save result
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add automation/rhythm-pizza-result.txt
+          git commit -m 'Record Rhythm Pizza counter result' || exit 0
+          git push
