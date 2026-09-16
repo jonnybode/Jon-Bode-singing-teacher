@@ -1,4 +1,4 @@
-const CACHE='olgc-show-v2-roles-20260916-4';
+const CACHE='olgc-show-v2-caller-20260916-5';
 const ASSETS=['./','./index.html','./v2.html'];
 self.addEventListener('install',event=>{
   event.waitUntil(caches.open(CACHE).then(cache=>Promise.all(ASSETS.map(async path=>{
