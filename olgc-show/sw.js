@@ -1,4 +1,4 @@
-const CACHE='olgc-show-v2';
+const CACHE='olgc-show-v2-notes-20260916';
 const ASSETS=['./','./index.html','./v2.html'];
 
 self.addEventListener('install',event=>{
